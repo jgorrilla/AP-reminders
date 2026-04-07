@@ -1,0 +1,143 @@
+import SwiftUI
+
+struct ContentView: View {
+  var body: some View {
+    ZStack() {
+      Group {
+        Rectangle()
+          .foregroundColor(.clear)
+          .frame(width: 1, height: 2)
+          .background(Color(red: 0.85, green: 0.85, blue: 0.85))
+          .offset(x: 37.50, y: 333)
+        Rectangle()
+          .foregroundColor(.clear)
+          .frame(width: 382, height: 134)
+          .background(Color(red: 0.85, green: 0.85, blue: 0.85))
+          .cornerRadius(12)
+          .offset(x: 0, y: -282)
+        Text("Example Message")
+          .font(Font.custom("Inter", size: 32))
+          .foregroundColor(.black)
+          .offset(x: 0, y: -323)
+        Text("AP test Name\nDetails")
+          .font(Font.custom("Inter", size: 20))
+          .foregroundColor(.black)
+          .offset(x: 6, y: -256)
+        Rectangle()
+          .foregroundColor(.clear)
+          .frame(width: 382, height: 134)
+          .background(Color(red: 0.85, green: 0.85, blue: 0.85))
+          .cornerRadius(12)
+          .offset(x: 0, y: -139)
+        Text("Example Message")
+          .font(Font.custom("Inter", size: 32))
+          .foregroundColor(.black)
+          .offset(x: 0, y: -180)
+        Text("AP Test Name\nTeacher Name\nStudy Link")
+          .font(Font.custom("Inter", size: 20))
+          .foregroundColor(.black)
+          .offset(x: 6, y: -113)
+        Rectangle()
+          .foregroundColor(.clear)
+          .frame(width: 382, height: 134)
+          .background(Color(red: 0.85, green: 0.85, blue: 0.85))
+          .cornerRadius(12)
+          .offset(x: 0, y: 4)
+        Text("Example Message")
+          .font(Font.custom("Inter", size: 32))
+          .foregroundColor(.black)
+          .offset(x: 0, y: -37)
+        Text("EP Schools\nDetails")
+          .font(Font.custom("Inter", size: 20))
+          .foregroundColor(.black)
+          .offset(x: 6, y: 30)
+      };Group {
+        Rectangle()
+          .foregroundColor(.clear)
+          .frame(width: 137, height: 110)
+          .background(Color(red: 0.50, green: 0.23, blue: 0.27).opacity(0.50))
+          .offset(x: 146.50, y: -404)
+        Rectangle()
+          .foregroundColor(.clear)
+          .frame(width: 430, height: 80)
+          .background(Color(red: 0.85, green: 0.85, blue: 0.85))
+          .offset(x: 0, y: 426)
+        Rectangle()
+          .foregroundColor(.clear)
+          .frame(width: 100, height: 80)
+          .background(Color(red: 0.85, green: 0.85, blue: 0.85))
+          .offset(x: -150, y: 426)
+        ZStack() {
+
+        }
+        .frame(width: 48, height: 48)
+        .offset(x: -150, y: 426)
+        Rectangle()
+          .foregroundColor(.clear)
+          .frame(width: 100, height: 80)
+          .background(Color(red: 0.85, green: 0.85, blue: 0.85))
+          .offset(x: 50, y: 426)
+        ZStack() {
+
+        }
+        .frame(width: 43, height: 48)
+        .offset(x: 49.50, y: 426)
+        Rectangle()
+          .foregroundColor(.clear)
+          .frame(width: 4.41, height: 16)
+          .background(Color(red: 0.12, green: 0.12, blue: 0.12))
+          .offset(x: 40.13, y: 432)
+        Rectangle()
+          .foregroundColor(.clear)
+          .frame(width: 4.41, height: 16)
+          .background(Color(red: 0.12, green: 0.12, blue: 0.12))
+          .offset(x: 50.06, y: 432)
+        Rectangle()
+          .foregroundColor(.clear)
+          .frame(width: 4.41, height: 16)
+          .background(Color(red: 0.12, green: 0.12, blue: 0.12))
+          .offset(x: 59.97, y: 432)
+        Rectangle()
+          .foregroundColor(.clear)
+          .frame(width: 37.49, height: 4)
+          .background(Color(red: 0.12, green: 0.12, blue: 0.12))
+          .offset(x: 48.95, y: 432)
+      };Group {
+        Rectangle()
+          .foregroundColor(.clear)
+          .frame(width: 100, height: 80)
+          .background(Color(red: 0.85, green: 0.85, blue: 0.85))
+          .offset(x: 150, y: 426)
+        Rectangle()
+          .foregroundColor(.clear)
+          .frame(width: 57, height: 57)
+          .background(Color(red: 0.50, green: 0.23, blue: 0.27).opacity(0.50))
+          .offset(x: 150.50, y: 425.50)
+        Rectangle()
+          .foregroundColor(.clear)
+          .frame(width: 100, height: 80)
+          .background(Color(red: 0.85, green: 0.85, blue: 0.85))
+          .offset(x: -50, y: 426)
+        Rectangle()
+          .foregroundColor(.clear)
+          .frame(width: 71, height: 60)
+          .background(Color(red: 0.48, green: 0.48, blue: 0.48))
+          .cornerRadius(12)
+          .offset(x: -49.50, y: 426)
+        ZStack() {
+
+        }
+        .frame(width: 48, height: 48)
+        .offset(x: -50, y: 426)
+      }
+    }
+    .frame(width: 430, height: 932)
+    .background(.white);
+  }
+}
+
+struct ContentView_Previews: PreviewProvider {
+  static var previews: some View {
+    ContentView()
+  }
+}
