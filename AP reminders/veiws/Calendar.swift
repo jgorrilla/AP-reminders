@@ -1,255 +1,350 @@
-//
-//  Calender.swift
-//  AP reminders
-//
-//  Created by 64005533 on 4/8/26.
-//
 import SwiftUI
 
-struct CalendarEvent: Identifiable {
+// MARK: - Models
+
+struct CalendarEvent: Identifiable, Hashable {
     let id = UUID()
-    let title: String
-    let time: String
-    let location: String
-    let materials: String
+    var title: String
+    var time: String
+    var location: String
+    var materials: String
 }
 
-struct Day: Identifiable {
+struct Month: Identifiable, Equatable {
     let id = UUID()
     let date: Date
-    var events: [CalendarEvent]
+    let days: [Date]
 }
 
-
-let calendarDays: [Day] = (1...30).map { i in
-    Day(
-        date: Calendar.current.date(bySetting: .day, value: i, of: Date())!,
-        events: []
-    )
+struct SelectedDate: Identifiable {
+    let id = UUID()
+    let date: Date
 }
+
+// MARK: - Main Calendar View
+
 struct CalendarView: View {
     
-    @State private var days: [Day] = []
-    @State private var selectedDay: Day?
+    @State private var months: [Month] = []
+    @State private var yearOffset: Int = 0
+    
+    @State private var selectedDate: SelectedDate?
     @State private var showAddEvent = false
-    @State private var currentMonth = Date()
+    @State private var addEventDate = Date()
     
-    let columns = Array(repeating: GridItem(.flexible()), count: 7)
+    @State private var eventsByDate: [Date: [CalendarEvent]] = [:]
     
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 7)
+
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
             
-            // 🔹 Month label + Add button
+            // MARK: Header
             HStack {
-                
-                Button(action: {
-                    changeMonth(by: -1)
-                }) {
+                Button { shiftYear(by: -1) } label: {
                     Image(systemName: "chevron.left")
                 }
-                
+
                 Spacer()
-                
-                Text(currentMonthString())
-                    .font(.title)
+
+                Text(displayYearLabel())
+                    .font(.title2)
                     .bold()
-                
+
                 Spacer()
-                
-                Button(action: {
-                    changeMonth(by: 1)
-                }) {
+
+                Button { shiftYear(by: 1) } label: {
                     Image(systemName: "chevron.right")
                 }
-                
-                Button(action: {
+
+                Button {
+                    if let selected = selectedDate {
+                        addEventDate = selected.date
+                    } else {
+                        addEventDate = Date()
+                    }
                     showAddEvent = true
-                }) {
+                } label: {
                     Image(systemName: "plus")
-                        .padding(.leading)
+                        .padding(.leading, 12)
                 }
             }
-            .padding(.horizontal)
-            
-            // 🔹 Calendar grid
-            ScrollView {
-                LazyVGrid(columns: columns, spacing: 10) {
-                    ForEach(days.indices, id: \.self) { index in
-                        let day = days[index]
-                        
-                        Button(action: {
-                            selectedDay = day
-                        }) {
-                            Text("\(Calendar.current.component(.day, from: day.date))")
-                                .frame(width: 40, height: 40)
-                                .background(backgroundColor(for: day))
-                                .foregroundColor(.black)
-                                .cornerRadius(8)
+            .padding()
+
+            Divider()
+
+            // MARK: Calendar Scroll
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(spacing: 28) {
+                        ForEach(months) { month in
+                            monthView(month)
+                                .id(month.id)
                         }
                     }
+                    .padding(.vertical, 16)
                 }
-                .padding()
+                .onAppear {
+                    loadMonths()
+                    scrollToCurrentMonth(proxy: proxy)
+                }
+                .onChange(of: months) {
+                    scrollToCurrentMonth(proxy: proxy)
+                }
             }
         }
-        
-        // 🔹 Day detail popup
-        .sheet(item: $selectedDay) { day in
-            if let index = days.firstIndex(where: {
-                Calendar.current.isDate($0.date, inSameDayAs: day.date)
-            }) {
-                DayDetailView(day: $days[index])
-            }
-        }
-        // 🔹 Add event popup
         .sheet(isPresented: $showAddEvent) {
-            AddEventView { newEvent, date in
-                addEvent(newEvent, to: date)
+            AddEventView(initialDate: addEventDate) { event, date in
+                addEvent(event, to: date)
             }
         }
-        .onAppear {
-            days = generateDays(for: currentMonth)
-        }
-    }
-    // MARK: - Helpers
-    func changeMonth(by value: Int) {
-        if let newMonth = Calendar.current.date(byAdding: .month, value: value, to: currentMonth) {
-            currentMonth = newMonth
-            days = generateDays(for: newMonth)
+        .sheet(item: $selectedDate) { selection in
+            DayDetailView(
+                date: selection.date,
+                events: eventsBinding(for: selection.date)
+            )
         }
     }
     
+    // MARK: - Month View
     
-    func currentMonthString() -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "LLLL yyyy"
-        return formatter.string(from: Date())
-    }
-    
-    func isToday(_ date: Date) -> Bool {
-        Calendar.current.isDateInToday(date)
-    }
-    
-    func backgroundColor(for day: Day) -> Color {
-        if isToday(day.date) {
-            return Color.green.opacity(0.6) // 🔹 today highlight
-        } else if !day.events.isEmpty {
-            return Color.blue.opacity(0.5) // 🔹 has events
-        } else {
-            return Color.clear
-        }
-    }
-    
-    func addEvent(_ event: CalendarEvent, to date: Date) {
-        for i in days.indices {
-            if Calendar.current.isDate(days[i].date, inSameDayAs: date) {
-                days[i].events.append(event)
+    private func monthView(_ month: Month) -> some View {
+        VStack(spacing: 12) {
+            
+            Text(monthString(from: month.date))
+                .font(.title2)
+                .bold()
+                .frame(maxWidth: .infinity, alignment: .leading)
+            HStack {
+                ForEach(weekdaySymbols(), id: \.self) { day in
+                    Text(day)
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            LazyVGrid(columns: columns, spacing: 10) {
+                
+                ForEach(0..<firstWeekdayOffset(for: month.date), id: \.self) { _ in
+                    Color.clear.frame(height: 44)
+                }
+
+                ForEach(month.days, id: \.self) { date in
+                    Button {
+                        selectedDate = SelectedDate(date: date)
+                    } label: {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(backgroundColor(for: date))
+                                .frame(height: 44)
+
+                            Text("\(Calendar.current.component(.day, from: date))")
+                                .foregroundColor(Calendar.current.isDateInWeekend(date) ? .red : .primary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
             }
         }
+        .padding(.horizontal)
     }
-    func deleteEvent(_ event: CalendarEvent, from date: Date) {
-        for i in days.indices {
-            if Calendar.current.isDate(days[i].date, inSameDayAs: date) {
-                days[i].events.removeAll { $0.id == event.id }
-            }
+
+    // MARK: - Data Loading
+    private func weekdaySymbols() -> [String] {
+        let cal = Calendar.current
+        let symbols = cal.shortWeekdaySymbols
+        let start = cal.firstWeekday - 1
+        
+        return Array(symbols[start...]) + Array(symbols[..<start])
+    }
+    private func loadMonths() {
+        months = generateMonths(for: currentYear())
+    }
+
+    private func shiftYear(by value: Int) {
+        yearOffset += value
+        loadMonths()
+    }
+
+    private func currentYear() -> Int {
+        Calendar.current.component(.year, from: Date())
+    }
+
+    private func displayYearLabel() -> String {
+        String(currentYear() + yearOffset)
+    }
+
+    func generateMonths(for year: Int) -> [Month] {
+        let calendar = Calendar.current
+        
+        return (1...12).compactMap { month -> Month? in
+            var comp = DateComponents()
+            comp.year = year + yearOffset
+            comp.month = month
+            
+            guard let date = calendar.date(from: comp) else { return nil }
+            
+            return Month(date: date, days: generateDays(for: date))
         }
     }
-    func generateDays(for date: Date) -> [Day] {
+
+    private func generateDays(for date: Date) -> [Date] {
         let calendar = Calendar.current
         
         guard let range = calendar.range(of: .day, in: .month, for: date),
-              let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: date))
+              let start = calendar.date(from: calendar.dateComponents([.year, .month], from: date))
         else { return [] }
-        
-        return range.compactMap { day -> Day? in
-            guard let fullDate = calendar.date(byAdding: .day, value: day - 1, to: startOfMonth) else { return nil }
-            return Day(date: fullDate, events: [])
+
+        return range.compactMap {
+            calendar.date(byAdding: .day, value: $0 - 1, to: start)
         }
     }
-    
 
+    // MARK: - Helpers
+
+    private func monthString(from date: Date) -> String {
+        let f = DateFormatter()
+        f.dateFormat = "LLLL"
+        return f.string(from: date)
+    }
+
+    private func firstWeekdayOffset(for date: Date) -> Int {
+        let cal = Calendar.current
+        guard let start = cal.date(from: cal.dateComponents([.year, .month], from: date)) else { return 0 }
+        return cal.component(.weekday, from: start) - 1
+    }
+
+    private func backgroundColor(for date: Date) -> Color {
+        if Calendar.current.isDateInToday(date) {
+            return Color.green.opacity(0.6)
+        } else if hasEvents(date) {
+            return Color.blue.opacity(0.5)   // 📌 days WITH events
+        } else if Calendar.current.isDateInWeekend(date) {
+            return Color.red.opacity(0.12)
+        } else {
+            return Color.gray.opacity(0.08)  // 📌 normal days
+        }
+    }
+
+    // MARK: - Scroll
+
+    func scrollToCurrentMonth(proxy: ScrollViewProxy) {
+        let now = Date()
+        
+        guard let month = months.first(where: {
+            Calendar.current.isDate($0.date, equalTo: now, toGranularity: .month)
+        }) else { return }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            proxy.scrollTo(month.id, anchor: .top)
+        }
+    }
+
+    // MARK: - Events
+
+    private func normalized(_ date: Date) -> Date {
+        Calendar.current.startOfDay(for: date)
+    }
+
+    private func eventsBinding(for date: Date) -> Binding<[CalendarEvent]> {
+        let key = normalized(date)
+        
+        return Binding(
+            get: { eventsByDate[key] ?? [] },
+            set: { eventsByDate[key] = $0 }
+        )
+    }
+
+    private func addEvent(_ event: CalendarEvent, to date: Date) {
+        let key = normalized(date)
+        eventsByDate[key, default: []].append(event)
+        
+    }
+    private func hasEvents(_ date: Date) -> Bool {
+        let key = normalized(date)
+        return !(eventsByDate[key]?.isEmpty ?? true)
+    }
 }
+
+// MARK: - Day Detail
+
 struct DayDetailView: View {
-    
-    @Binding var day: Day
-    
-    @State private var eventToDelete: CalendarEvent?
-    @State private var showConfirm = false
-    
+    let date: Date
+    @Binding var events: [CalendarEvent]
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var showAddEvent = false
+
     var body: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: 20) {
-                
-                Text("Events on \(formattedDate(day.date))")
-                    .font(.title2)
-                    .bold()
-                
-                if day.events.isEmpty {
-                    Text("No events today!")
+            
+            List {
+                if events.isEmpty {
+                    Text("No events for this day.")
                         .foregroundColor(.gray)
                 } else {
-                    ScrollView {
-                        ForEach(day.events) { event in
-                            VStack(alignment: .leading, spacing: 8) {
-                                
-                                Text(event.title)
-                                    .font(.headline)
-                                
-                                Text("Time: \(event.time)")
-                                Text("Location: \(event.location)")
-                                Text("Materials: \(event.materials)")
-                                
-                                Button(role: .destructive) {
-                                    eventToDelete = event
-                                    showConfirm = true
-                                } label: {
-                                    Text("Remove Event")
-                                }
-                            }
-                            .padding()
-                            .background(Color.gray.opacity(0.2))
-                            .cornerRadius(10)
+                    ForEach(events) { event in
+                        VStack(alignment: .leading) {
+                            Text(event.title).bold()
+                            Text(event.time)
+                            Text(event.location)
+                            Text(event.materials)
                         }
                     }
                 }
-                
-                Spacer()
             }
-            .padding()
             
-            .confirmationDialog(
-                "Are you sure?",
-                isPresented: $showConfirm
-            ) {
-                Button("Delete", role: .destructive) {
-                    if let event = eventToDelete {
-                        delete(event)
+            // 👇 TOOLBAR GOES HERE (outside List, inside NavigationStack)
+            .navigationTitle(formattedDate(date))
+            .toolbar {
+
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showAddEvent = true
+                    } label: {
+                        Image(systemName: "plus")
                     }
+                }
+
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+            
+            // 👇 SHEET ALSO HERE
+            .sheet(isPresented: $showAddEvent) {
+                AddEventView(initialDate: date) { newEvent, _ in
+                    events.append(newEvent)
                 }
             }
         }
     }
-    
-    func delete(_ event: CalendarEvent) {
-        day.events.removeAll { $0.id == event.id }
-    }
-    
     func formattedDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .full
         return formatter.string(from: date)
     }
 }
+
+// MARK: - Add Event
+
 struct AddEventView: View {
-    
     @Environment(\.dismiss) var dismiss
     
-    @State private var title = ""
-    @State private var time = ""
-    @State private var location = ""
-    @State private var materials = ""
-    @State private var date = Date()
-    
+    @State var title = ""
+    @State var time = ""
+    @State var location = ""
+    @State var materials = ""
+    @State var date: Date
+
     var onSave: (CalendarEvent, Date) -> Void
+
+    init(initialDate: Date, onSave: @escaping (CalendarEvent, Date) -> Void) {
+        self.onSave = onSave
+        _date = State(initialValue: initialDate)
+    }
     
     var body: some View {
         NavigationStack {
@@ -258,20 +353,21 @@ struct AddEventView: View {
                 TextField("Time", text: $time)
                 TextField("Location", text: $location)
                 TextField("Materials", text: $materials)
-                
+
                 DatePicker("Date", selection: $date, displayedComponents: .date)
             }
-            
             .navigationTitle("Add Event")
-            
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                
+                // CANCEL
+                ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") {
                         dismiss()
                     }
                 }
                 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                // SAVE ✅
+                ToolbarItem(placement: .topBarTrailing) {
                     Button("Save") {
                         let newEvent = CalendarEvent(
                             title: title,
@@ -285,6 +381,14 @@ struct AddEventView: View {
                     }
                 }
             }
+            
         }
     }
+    
+}
+
+// MARK: - Preview
+
+#Preview {
+    CalendarView()
 }
