@@ -1,76 +1,88 @@
+// ============================================================
+// TeacherLoginView.swift
+// AP Reminders
+//
+// Sheet presented from Settings when "Enable Teacher Mode" is
+// tapped. Validates email against an allowlist and checks a
+// shared password. On success calls onComplete(true), which
+// Settings uses to set AppState.isTeacherMode = true.
+//
+// TO ADD AN AUTHORIZED EMAIL: add it to allowedEmails below.
+// TO CHANGE THE PASSWORD:     update sharedPassword below.
+// ============================================================
+
 import SwiftUI
 
 struct TeacherLoginView: View {
+
+    // ── Auth config ───────────────────────────────────────────
+    // Add teacher email addresses to this set.
     let allowedEmails: Set<String> = [
-        "teacher1@school.org",
+        "hilol",
         "teacher2@school.org",
-        "admin@school.org"
+        "admin@school.org",
     ]
 
-    let sharedPassword = "AP2026" // change to whatever you want
+    // Shared password for all teacher accounts.
+    let sharedPassword = "1234"
+
+    // ── State ─────────────────────────────────────────────────
     @Environment(\.dismiss) private var dismiss
-    
-    @State private var email = ""
-    @State private var password = ""
-    @State private var errorMessage: String?
-    
+    @State private var email        = ""
+    @State private var password     = ""
+    @State private var errorMessage : String?
+
+    /// Called with true on successful login, false is never called
+    /// (the sheet is simply dismissed on cancel).
     var onComplete: (Bool) -> Void
-    
+
     var body: some View {
         NavigationStack {
             Form {
-                
                 Section(header: Text("Verify Teacher Access")) {
-                    
                     TextField("Email", text: $email)
                         .keyboardType(.emailAddress)
-                    
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
+
                     SecureField("Password", text: $password)
-                    
                 }
-                
-                if let errorMessage = errorMessage {
-                    Text(errorMessage)
-                        .foregroundColor(.red)
+
+                if let errorMessage {
+                    Section {
+                        Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
+                            .foregroundColor(.red)
+                            .font(.subheadline)
+                    }
                 }
             }
             .navigationTitle("Teacher Login")
-            
             .toolbar {
-                
-                // Cancel
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
+                    Button("Cancel") { dismiss() }
                 }
-                
-                // Submit
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Verify") {
-                        validate()
-                    }
+                    Button("Verify") { validate() }
+                        .fontWeight(.semibold)
                 }
             }
         }
     }
-    
-    func validate() {
+
+    // MARK: - Validation
+
+    private func validate() {
         let normalizedEmail = email.lowercased().trimmingCharacters(in: .whitespaces)
-        
-        // 🔹 Check email is allowed
+
         guard allowedEmails.contains(normalizedEmail) else {
-            errorMessage = "Email not authorized"
+            errorMessage = "Email not authorized."
             return
         }
-        
-        // 🔹 Check password matches shared password
         guard password == sharedPassword else {
-            errorMessage = "Incorrect password"
+            errorMessage = "Incorrect password."
             return
         }
-        
-        // 🔹 Success
+
         onComplete(true)
         dismiss()
     }
