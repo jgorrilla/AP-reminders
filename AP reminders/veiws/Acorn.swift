@@ -1,29 +1,3 @@
-// ============================================================
-// Acorn.swift
-// AP Reminders
-//
-// AP Center tab. Shows:
-//   • Quick links to College Board and Bluebook
-//   • Bluebook tutorial button
-//   • Searchable list of all AP courses, grouped by subject
-//
-// ENROLLMENT:
-//   Each course row has an "Add Class" / "Remove" button.
-//   Tapping it calls AppState.enroll/unenroll, which updates
-//   the student's enrolled set. The Messages tab then filters
-//   to only show messages for enrolled classes, and the
-//   Calendar tab shows class events only for enrolled courses.
-//
-// GOOGLE SHEET INTEGRATION:
-//   Set googleSheetURL to your Apps Script Web App URL to load
-//   courses dynamically. Leave empty to use the built-in list.
-//   Pull-to-refresh re-fetches from the sheet.
-//
-// ADD / REMOVE A COURSE (built-in list):
-//   Edit fallbackCourses() at the bottom of this file.
-//   To ADD:    append a new APCourse(...) entry.
-//   To REMOVE: delete the APCourse(...) entry.
-// ============================================================
 
 import SwiftUI
 

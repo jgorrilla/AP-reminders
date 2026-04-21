@@ -97,8 +97,6 @@ struct SettingsView: View {
                     }
                 } header: {
                     Text("Accessibility")
-                } footer: {
-                    Text("Dark Mode, Larger Text, and High Contrast apply immediately across the whole app.")
                 }
 
                 // ── App info section ──────────────────────────

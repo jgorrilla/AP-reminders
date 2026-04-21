@@ -1,23 +1,4 @@
-// ============================================================
-// ContentView.swift
-// AP Reminders
-//
-// Root view. Hosts the tab bar and injects AppState as an
-// EnvironmentObject so every child tab can read/write shared
-// state without passing it manually.
-//
-// ACCESSIBILITY FIXES:
-//   • Dark mode is applied via .preferredColorScheme and
-//     re-evaluated on every render — no init() side effects
-//     that caused crashes.
-//   • Large text uses @ScaledMetric-friendly .dynamicTypeSize
-//     modifier so system font scaling still works; the toggle
-//     bumps it one extra step (accessibility2) when on.
-//   • High contrast tints the environment with a higher-
-//     contrast color scheme hint.
-//   • Tab bar appearance is rebuilt in a helper that is called
-//     from .onAppear and .onChange so it tracks dark mode live.
-// ============================================================
+
 
 import SwiftUI
 

@@ -18,9 +18,9 @@ struct TeacherLoginView: View {
     // ── Auth config ───────────────────────────────────────────
     // Add teacher email addresses to this set.
     let allowedEmails: Set<String> = [
-        "hilol",
+        "64005533@ep-student.org",
         "teacher2@school.org",
-        "admin@school.org",
+        "test",
     ]
 
     // Shared password for all teacher accounts.
